@@ -1,0 +1,50 @@
+{
+  "name": "@frogasia/ilmu-openclaw-plugin",
+  "version": "0.1.0",
+  "description": "Ilmu LLM provider for OpenClaw — OpenAI-compatible access to Ilmu models (nemo-super, ilmu-nemo-nano).",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/frogasia/openclaw-plugin-ilmu.git"
+  },
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "prepublishOnly": "npm run typecheck && npm test",
+    "release": "changeset publish"
+  },
+  "files": [
+    "src/",
+    "openclaw.plugin.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "openclaw": {
+    "id": "ilmu",
+    "compat": {
+      "pluginApi": ">=1.0.0"
+    },
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "peerDependencies": {
+    "openclaw": ">=2026.4.15"
+  },
+  "peerDependenciesMeta": {
+    "openclaw": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.0",
+    "@mariozechner/pi-ai": "^0.71.1",
+    "@types/node": "^22.0.0",
+    "openclaw": "^2026.4.15",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}

@@ -1,0 +1,11 @@
+test/
+.github/
+.changeset/
+.gitignore
+.npmignore
+.vscode/
+tsconfig.json
+vitest.config.ts
+*.test.ts
+.env*
+coverage/
