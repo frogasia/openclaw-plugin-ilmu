@@ -1,5 +1,5 @@
 {
-  "name": "@frogasia/ilmu-openclaw-plugin",
+  "name": "@ytlailabs/ilmu-openclaw-plugin",
   "version": "0.1.0",
   "description": "Ilmu LLM provider for OpenClaw — OpenAI-compatible access to Ilmu models (nemo-super, ilmu-nemo-nano).",
   "license": "MIT",

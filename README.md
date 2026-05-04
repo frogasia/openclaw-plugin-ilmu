@@ -1,6 +1,6 @@
 # Ilmu OpenClaw Plugin
 
-[![npm](https://img.shields.io/npm/v/@frogasia/ilmu-openclaw-plugin.svg)](https://www.npmjs.com/package/@frogasia/ilmu-openclaw-plugin)
+[![npm](https://img.shields.io/npm/v/@ytlailabs/ilmu-openclaw-plugin.svg)](https://www.npmjs.com/package/@ytlailabs/ilmu-openclaw-plugin)
 
 OpenClaw plugin that registers [Ilmu](https://ilmu.ai) as an LLM provider. Ilmu exposes its models through an OpenAI-compatible API, so this plugin reuses OpenClaw's standard `openai-completions` replay family — no custom transport.
 
@@ -24,13 +24,13 @@ Both models declare `reasoning: true`. Onboarding seeds `agents.defaults.thinkin
 ## Install
 
 ```bash
-npm install @frogasia/ilmu-openclaw-plugin
+npm install @ytlailabs/ilmu-openclaw-plugin
 ```
 
 Or via the OpenClaw CLI once published to Clawhub:
 
 ```bash
-openclaw plugin install @frogasia/ilmu-openclaw-plugin
+openclaw plugin install @ytlailabs/ilmu-openclaw-plugin
 ```
 
 ## Onboard
