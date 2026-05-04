@@ -1,0 +1,44 @@
+name: release
+
+# Triggered when an engineer publishes a GitHub Release on https://github.com/<repo>/releases.
+# Engineer flow:
+#   1. Locally bump the version: `npm version <patch|minor|major>` (creates a commit + tag).
+#   2. Push: `git push origin main --follow-tags`.
+#   3. On GitHub: Releases → Draft new release → pick the new tag → write notes → Publish.
+# This workflow then verifies the tag matches package.json and publishes to npm with provenance.
+
+on:
+  release:
+    types: [published]
+
+concurrency: release-${{ github.event.release.tag_name }}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          registry-url: https://registry.npmjs.org
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - name: Verify package.json version matches release tag
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          TAG=${GITHUB_REF_NAME#v}
+          if [ "$PKG_VERSION" != "$TAG" ]; then
+            echo "::error::package.json version ($PKG_VERSION) does not match release tag ($TAG)"
+            exit 1
+          fi
+      - run: npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
