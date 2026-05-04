@@ -7,3 +7,6 @@ dist/
 !.env.example
 coverage/
 .vitest-cache/
+.idea/
+tmp/
+temp/
