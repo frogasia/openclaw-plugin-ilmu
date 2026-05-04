@@ -11,10 +11,7 @@
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "changeset": "changeset",
-    "version": "changeset version",
-    "prepublishOnly": "npm run typecheck && npm test",
-    "release": "changeset publish"
+    "prepublishOnly": "npm run typecheck && npm test"
   },
   "files": [
     "src/",
@@ -40,7 +37,6 @@
     }
   },
   "devDependencies": {
-    "@changesets/cli": "^2.27.0",
     "@mariozechner/pi-ai": "^0.71.1",
     "@types/node": "^22.0.0",
     "openclaw": "^2026.4.15",

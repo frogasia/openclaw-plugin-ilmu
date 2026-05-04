@@ -100,13 +100,28 @@ This plugin ships TypeScript sources directly (no build step). `package.json` de
 
 ## Releases
 
-Versioning uses [changesets](https://github.com/changesets/changesets). For each PR that should ship to npm:
+Releases are engineer-gated and triggered by publishing a [GitHub Release](https://github.com/frogasia/openclaw-plugin-ilmu/releases). Maintainer flow:
 
 ```bash
-npx changeset
+# 1. From a clean main with the checkpoint commit at HEAD:
+git checkout main && git pull
+
+# 2. Bump version (creates a commit + an annotated tag like v0.2.0):
+npm version minor    # or patch / major
+
+# 3. Push the bump commit + tag together:
+git push origin main --follow-tags
 ```
 
-…and follow the prompts. On merge to `main`, the release workflow opens a Version Packages PR; merging it publishes to npm and creates a GitHub Release.
+Then on GitHub: **Releases → Draft a new release → pick the tag you just pushed → write release notes → Publish**.
+
+Publishing the GitHub Release triggers `.github/workflows/release.yml`, which:
+1. Checks out the tagged commit.
+2. Runs typecheck + tests.
+3. Verifies `package.json` version matches the tag.
+4. `npm publish --access public --provenance`.
+
+The repo needs an `NPM_TOKEN` secret (npm publish-scope token, set under Settings → Secrets and variables → Actions). The workflow uses [npm provenance](https://docs.npmjs.com/generating-provenance-statements) — published versions show a verified link back to this repo and commit.
 
 ## License
 
