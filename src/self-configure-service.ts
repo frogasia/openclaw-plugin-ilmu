@@ -14,9 +14,11 @@ import {
   summarizeBootstrapFloorPlan,
 } from "./bootstrap-floor.js";
 import {
-  applyIlmuSkillWrite,
+  ALL_SKILLS,
+  applySkillWrite,
   resolveIlmuSkillPath,
   resolveIlmuSkillsDir,
+  resolveOpenclawSkillPath,
 } from "./skill-writer.js";
 
 export const ILMU_SELF_CONFIGURE_SERVICE_ID = "ilmu/self-configure";
@@ -75,6 +77,7 @@ export function resolveIlmuPaths(params: {
     configPath: params.configPath,
     skillsDir: resolveIlmuSkillsDir(params.workspaceDir),
     skillPath: resolveIlmuSkillPath(params.workspaceDir),
+    openclawSkillPath: resolveOpenclawSkillPath(params.workspaceDir),
     agentsMdPath: join(params.workspaceDir, AGENTS_MD_FILENAME),
   };
 }
@@ -140,13 +143,15 @@ export async function runIlmuSelfConfigure(
   }
 
   if (flags.skill) {
-    await runIsolated(logger, "skill", paths.skillPath, async () => {
-      const result = await applyIlmuSkillWrite({
-        workspaceDir: paths.workspaceDir,
-        configPath: paths.configPath,
+    for (const spec of ALL_SKILLS) {
+      await runIsolated(logger, `skill[${spec.slug}]`, resolveIlmuSkillsDir(paths.workspaceDir), async () => {
+        const result = await applySkillWrite(spec, {
+          workspaceDir: paths.workspaceDir,
+          configPath: paths.configPath,
+        });
+        logger.info?.(`ilmu plugin: skill[${spec.slug}] ${result.action} at ${result.path}`);
       });
-      logger.info?.(`ilmu plugin: skill ${result.action} at ${result.path}`);
-    });
+    }
   }
 
   if (flags.bootstrapBump) {

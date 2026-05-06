@@ -9,7 +9,10 @@ export type IlmuAgentsMdPaths = {
   workspaceDir: string;
   configPath: string;
   skillsDir: string;
+  /** Absolute path to the ilmu-configuration skill (preserved for back-compat). */
   skillPath: string;
+  /** Absolute path to the openclaw-configuration skill. */
+  openclawSkillPath: string;
 };
 
 export type AgentsMdSpliceResult = {
@@ -39,7 +42,8 @@ function applyPlaceholders(template: string, paths: IlmuAgentsMdPaths): string {
     .replaceAll("{{workspaceDir}}", paths.workspaceDir)
     .replaceAll("{{configPath}}", paths.configPath)
     .replaceAll("{{skillsDir}}", paths.skillsDir)
-    .replaceAll("{{skillPath}}", paths.skillPath);
+    .replaceAll("{{skillPath}}", paths.skillPath)
+    .replaceAll("{{openclawSkillPath}}", paths.openclawSkillPath);
 }
 
 function sha256(input: string): string {

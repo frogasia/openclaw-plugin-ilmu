@@ -17,79 +17,62 @@ The config file is JSON-with-comments (jsonc). Preserve user comments and traili
 
 ## Common tasks
 
-### 1. Switch the default model to a different ILMU model
+### 1. Switch the default ILMU model
 
-1. Read `{{configPath}}`.
-2. Locate `agents.defaults.primaryModel` (string, e.g. `"ilmu/nemo-super"`).
-3. Replace with the desired ILMU model ref. Valid refs:
-   - `ilmu/nemo-super`
-   - `ilmu/ilmu-nemo-nano`
-4. If you also want a friendly alias, edit `agents.defaults.models["ilmu/<model>"].alias`.
-5. Save the file. Restart any running OpenClaw session for the change to take effect.
+1. Locate the field with `openclaw config schema lookup agents.defaults.model.primary`.
+2. Use `openclaw config set agents.defaults.model.primary '"ilmu/<model>"'` (quote the JSON value). Valid refs: `ilmu/nemo-super`, `ilmu/ilmu-nemo-nano`.
+3. If you want a friendly alias, edit `agents.defaults.models["ilmu/<model>"].alias` directly in `{{configPath}}`.
+4. Validate, then follow the restart guidance below.
 
 ### 2. Add or rotate an ILMU API key
 
-API keys are read from the `ILMU_API_KEY` env var by default. To rotate:
+API keys are read from the `ILMU_API_KEY` env var by default.
 
-1. Update the env var in the user's shell profile (`~/.zshrc`, `~/.bashrc`, or the systemd unit / launchd plist depending on platform).
-2. Restart OpenClaw.
+- **Env-var path (recommended):** update `ILMU_API_KEY` in the user's shell profile or service unit. The new value is not visible to the running gateway, so a shell restart and gateway restart are both required.
+- **Config-persisted path:** set `models.providers.ilmu.apiKey` in `{{configPath}}`. Validate. Restart only if the tool tells you to.
 
-If the user wants the key persisted in config instead:
+### 3. Change the ILMU base URL (e.g. staging endpoint)
 
-1. Read `{{configPath}}`.
-2. Set `models.providers.ilmu.apiKey` to the new key.
-3. Save and restart.
-
-### 3. Change the ILMU base URL (e.g. for a staging endpoint)
-
-1. Read `{{configPath}}`.
-2. Set `models.providers.ilmu.baseUrl` to the new URL (no trailing slash).
-3. Save and restart.
+1. Set `models.providers.ilmu.baseUrl` in `{{configPath}}` (no trailing slash).
+2. Validate, then follow the restart guidance below.
 
 ### 4. Tune the thinking budget
 
 ILMU models support reasoning. The plugin seeds `agents.defaults.thinkingDefault = "medium"` on first onboarding. Valid values: `"off" | "low" | "medium" | "high"`.
 
-1. Read `{{configPath}}`.
-2. Set `agents.defaults.thinkingDefault`.
-3. Save and restart.
+1. `openclaw config set agents.defaults.thinkingDefault '"<value>"'`.
+2. Validate, then follow the restart guidance below.
 
 ### 5. Add or update model aliases
 
-1. Read `{{configPath}}`.
-2. Edit `agents.defaults.models["ilmu/<model>"].alias` (string).
-3. Save and restart.
+1. Edit `agents.defaults.models["ilmu/<model>"].alias` in `{{configPath}}`.
+2. Validate, then follow the restart guidance below.
 
 ## Validation
 
-After every edit, validate with:
+After every edit:
 
 ```sh
 openclaw doctor
 ```
 
-`openclaw doctor` will surface schema errors, missing API keys, unreachable endpoints, and conflicting overrides.
-
-If validation fails, **do not** modify the config further — show the doctor output to the user and ask before continuing.
+`openclaw doctor` surfaces schema errors, missing API keys, unreachable endpoints, and conflicting overrides. If it reports errors, **do not** modify the config further — show the doctor output to the user and ask before continuing.
 
 ## Restart cadence
 
-- Config edits require a session restart to take effect (the config is read at session start).
-- Env var changes (`ILMU_API_KEY`) require a shell restart **before** restarting OpenClaw.
+OpenClaw decides whether a restart is needed; do not assume:
+
+- `openclaw config set` and `openclaw plugins install` print `Restart the gateway to apply.` ONLY when a restart is needed. Trust that line.
+- `openclaw doctor` flags pending restarts in its summary.
+- **Only restart if the tool explicitly says so.** Restarts can take 30s–2min depending on environment.
+- Env-var changes (`ILMU_API_KEY`) DO require a shell restart followed by a gateway restart, because the new env value is not visible to the running gateway.
+
+For broader OpenClaw configuration concerns (channels, gateway, agent defaults beyond ILMU, providers, MCP), use the `openclaw-configuration` skill.
 
 ## References
 
-### ILMU
-
 - **ILMUClaw cookbook** — recipes, tuning, troubleshooting:
   https://docs.ilmu.ai/docs/developer-tools/openclaw-cookbook
-
-### OpenClaw (broader setup help)
-
-- **Channels** — wiring Slack / Discord / etc:
-  https://docs.openclaw.ai/channels
-- **Showcase** — example agents and configurations:
-  https://docs.openclaw.ai/start/showcase
 
 ## Out of scope for this skill
 

@@ -15,6 +15,7 @@ function buildPaths(workspaceDir: string): IlmuAgentsMdPaths {
     configPath: `${workspaceDir}/openclaw.json`,
     skillsDir: `${workspaceDir}/skills`,
     skillPath: `${workspaceDir}/skills/ilmu-configuration/SKILL.md`,
+    openclawSkillPath: `${workspaceDir}/skills/openclaw-configuration/SKILL.md`,
   };
 }
 
@@ -28,6 +29,7 @@ describe("renderIlmuPlatformPromptBlock", () => {
     expect(block).toContain('version="1"');
     expect(block).toContain("/tmp/fixture-ws");
     expect(block).toContain("/tmp/fixture-ws/skills/ilmu-configuration/SKILL.md");
+    expect(block).toContain("/tmp/fixture-ws/skills/openclaw-configuration/SKILL.md");
     expect(block.startsWith("<ilmu-platform-prompt")).toBe(true);
     expect(block.endsWith("</ilmu-platform-prompt>")).toBe(true);
   });

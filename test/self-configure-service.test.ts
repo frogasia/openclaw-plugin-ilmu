@@ -75,7 +75,7 @@ describe("resolveConfigPath", () => {
 });
 
 describe("resolveIlmuPaths", () => {
-  it("derives all four paths from workspaceDir + configPath", () => {
+  it("derives all paths (including both skill paths) from workspaceDir + configPath", () => {
     const paths = resolveIlmuPaths({
       workspaceDir: "/ws",
       configPath: "/cfg/openclaw.json",
@@ -85,6 +85,7 @@ describe("resolveIlmuPaths", () => {
       configPath: "/cfg/openclaw.json",
       skillsDir: "/ws/skills",
       skillPath: "/ws/skills/ilmu-configuration/SKILL.md",
+      openclawSkillPath: "/ws/skills/openclaw-configuration/SKILL.md",
       agentsMdPath: "/ws/AGENTS.md",
     });
   });
