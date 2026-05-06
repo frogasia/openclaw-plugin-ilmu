@@ -78,9 +78,32 @@
       "cliDescription": "ILMU API key"
     }
   ],
+  "skills": [
+    "./skills"
+  ],
   "configSchema": {
     "type": "object",
     "additionalProperties": false,
-    "properties": {}
+    "properties": {
+      "mutations": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Per-mutation opt-out flags applied at plugin start. Each defaults to true. Env vars ILMU_NO_AGENTS_MD, ILMU_NO_SKILL, ILMU_NO_BOOTSTRAP_BUMP override these to false for a single run.",
+        "properties": {
+          "agentsMd": {
+            "type": "boolean",
+            "description": "Insert/replace the <ilmu-platform-prompt> block in workspace AGENTS.md."
+          },
+          "skill": {
+            "type": "boolean",
+            "description": "Write the ilmu-configuration skill into the workspace skills directory."
+          },
+          "bootstrapBump": {
+            "type": "boolean",
+            "description": "Raise (never lower) agents.defaults.bootstrapMaxChars / bootstrapTotalMaxChars to the ILMU floor."
+          }
+        }
+      }
+    }
   }
 }
