@@ -6,18 +6,18 @@ import type { OpenClawPluginService, OpenClawPluginServiceContext } from "opencl
 import {
   applyAgentsMdMutation,
   type IlmuAgentsMdPaths,
-} from "./agents-md-prompt.ts";
+} from "./agents-md-prompt.js";
 import {
   applyBootstrapFloorMutation,
   ILMU_BOOTSTRAP_MAX_CHARS_FLOOR,
   ILMU_BOOTSTRAP_TOTAL_MAX_CHARS_FLOOR,
   summarizeBootstrapFloorPlan,
-} from "./bootstrap-floor.ts";
+} from "./bootstrap-floor.js";
 import {
   applyIlmuSkillWrite,
   resolveIlmuSkillPath,
   resolveIlmuSkillsDir,
-} from "./skill-writer.ts";
+} from "./skill-writer.js";
 
 export const ILMU_SELF_CONFIGURE_SERVICE_ID = "ilmu/self-configure";
 export const AGENTS_MD_FILENAME = "AGENTS.md";

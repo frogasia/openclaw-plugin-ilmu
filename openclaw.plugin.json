@@ -3,7 +3,7 @@
   "name": "Ilmu",
   "description": "Ilmu LLM provider for OpenClaw — OpenAI-compatible access to Ilmu models (nemo-super, ilmu-nemo-nano).",
   "activation": {
-    "onStartup": false
+    "onStartup": true
   },
   "enabledByDefault": true,
   "providerDiscoveryEntry": "./src/provider-discovery.ts",

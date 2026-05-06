@@ -3,7 +3,7 @@ import { defineSingleProviderPluginEntry } from "openclaw/plugin-sdk/provider-en
 import { buildProviderReplayFamilyHooks } from "openclaw/plugin-sdk/provider-model-shared";
 import { applyIlmuConfig, ILMU_DEFAULT_MODEL_REF } from "./onboard.js";
 import { buildIlmuProvider } from "./provider-catalog.js";
-import { buildIlmuSelfConfigureService } from "./self-configure-service.ts";
+import { buildIlmuSelfConfigureService } from "./self-configure-service.js";
 
 const PROVIDER_ID = "ilmu";
 
