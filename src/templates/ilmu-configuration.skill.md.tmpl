@@ -77,6 +77,20 @@ If validation fails, **do not** modify the config further — show the doctor ou
 - Config edits require a session restart to take effect (the config is read at session start).
 - Env var changes (`ILMU_API_KEY`) require a shell restart **before** restarting OpenClaw.
 
+## References
+
+### ILMU
+
+- **ILMUClaw cookbook** — recipes, tuning, troubleshooting:
+  https://docs.ilmu.ai/docs/developer-tools/openclaw-cookbook
+
+### OpenClaw (broader setup help)
+
+- **Channels** — wiring Slack / Discord / etc:
+  https://docs.openclaw.ai/channels
+- **Showcase** — example agents and configurations:
+  https://docs.openclaw.ai/start/showcase
+
 ## Out of scope for this skill
 
 - Editing OpenClaw bootstrap files (`AGENTS.md`, `SOUL.md`, `IDENTITY.md`, etc.).
