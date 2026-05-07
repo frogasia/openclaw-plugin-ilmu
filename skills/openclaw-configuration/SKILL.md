@@ -58,21 +58,25 @@ If none of these is present, do not raise the topic. Most config keys (provider 
 ### When you see a signal — consult the user, do not act
 
 1. Quote the exact line from the tool output that triggered the signal. Do not paraphrase.
-2. Recommend the official command: **`openclaw gateway restart`** (`--force` to skip waiting for in-flight work; `--wait <duration>` to defer). It resolves at runtime to one of three modes — all are graceful, none requires you to kill a PID:
-   - **Managed service** (launchd on macOS, systemd on Linux, scheduled task on Windows) — restart via the service manager.
-   - **Same PID namespace** — CLI sends `SIGUSR1` to the gateway PID; the run loop drains in-flight work (`deferGatewayRestartUntilIdle`), then re-initialises in-process. **No process exit, the parent shell stays bound, no orphaned-process problem.** This is the path that fires when the agent and gateway run in the same container or shell session — e.g. `docker run -it openclaw bash` then `openclaw gateway run` in that shell, with the agent loop running inside the gateway.
-   - **Windows scheduled-task handoff** — fallback for managed Windows installs.
-3. **The only topology where `openclaw gateway restart` cannot reach the gateway** is cross-container (agent in container A, gateway in container B with separate PID namespaces). In that case the CLI returns a non-zero exit / failure message — **trust that signal**; do NOT try to "fix" it by killing PIDs from the agent side, and do NOT escalate to `docker stop` / `docker restart` either. Surface to the operator: *"This agent appears to be in a different container from the gateway; `openclaw gateway restart` can't reach the gateway PID from here. You'll need to restart the gateway container yourself via your orchestrator (Docker `restart` policy, K8s rollout, etc.)."*
-4. Wait for the user to confirm before running anything restart-related. If they confirm, you may run `openclaw gateway restart` with the flags they approved — never anything else.
+2. Tell the user a restart appears to be needed, and offer to run **`openclaw gateway restart`** (`--force` to skip waiting for in-flight work; `--wait <duration>` to defer). Be honest about its limits — it only works reliably when the gateway is installed as a managed service (launchd on macOS, systemd on Linux, scheduled task on Windows). For foreground or container topologies it commonly fails with `Gateway service disabled` even when the gateway is healthy (see *Recognizing common restart failures* below). When that happens the operator must restart the foreground process themselves; you do not have a workaround.
+3. Wait for the user to confirm before running anything restart-related. If they confirm, you may run `openclaw gateway restart` with the flags they approved — never anything else.
+4. If the command fails, report the output verbatim and **stop**. Do not retry, do not escalate, do not look for "another way". The user decides what happens next.
 
-### Detecting your topology
+### Recognizing common restart failures
 
-Two env vars surface deployment context:
+The CLI bails on `openclaw gateway restart` for several reasons. Recognize the symptom and report the right fix to the operator instead of treating it as a generic failure:
 
-- `OPENCLAW_CONTAINER_HINT` — set by the operator or image to label the deployment shape (e.g. `"docker"`, `"k8s"`).
-- `OPENCLAW_CONTAINER` — same purpose; either is honoured by OpenClaw's runtime hints.
+- **`[restart] lsof failed during initial stale-pid scan ... ENOENT`** — the container is missing the `lsof` binary, which the CLI uses to discover the gateway PID. The gateway itself is unaffected. Tell the operator: *"`openclaw gateway restart` can't run because `lsof` is not installed in this container. Install it (`apt-get install lsof` on Debian, `apk add lsof` on Alpine) before retrying. The gateway is still running."*
+- **`Gateway service disabled` (with `lsof` installed)** — the CLI's PID-discovery passes through `lsof` but its argv-verification step (`isGatewayArgv`) rejects the running gateway's process arguments. This commonly happens in foreground/container topologies because the gateway sets its own `process.title`, which on Linux overwrites `/proc/<pid>/cmdline` and removes the `gateway` token the verifier requires. **There is no workaround the agent can apply.** Tell the operator: *"`openclaw gateway restart` reports `Gateway service disabled`. In foreground/container topology this is a known limitation — the CLI can't verify the running gateway's argv. To restart, you'll need to stop the current `openclaw gateway run` invocation in its shell (Ctrl-C) and re-run it. The gateway is still running until you do."* Do NOT then try `kill`, `gateway stop`, `docker stop`, or any other process-termination workaround — that returns to the original loop this skill is designed to prevent.
 
-When either is set, you are in a container. Use it to tailor your phrasing (*"this gateway is running in a container, so..."*) — but the lifecycle policy above is identical regardless of topology: surface the signal, recommend `openclaw gateway restart`, never act unilaterally, never kill.
+### Note on `OPENCLAW_CONTAINER` / `OPENCLAW_CONTAINER_HINT`
+
+These env vars are sometimes mistaken for runtime-topology hints. They are not — they control CLI dispatch:
+
+- `OPENCLAW_CONTAINER=<name>` (or `--container <name>`) makes the outer CLI run every subcommand via `docker exec <name>` / `podman exec <name>`. It's a convenience for operators on the host who want commands to land inside a named container.
+- `OPENCLAW_CONTAINER_HINT` is set by the outer CLI as a breadcrumb when it spawns the inner CLI inside a container; it's read by error-message formatters, not by any restart code path.
+
+Neither var unlocks a graceful-restart path or bypasses the verification gate that produces `Gateway service disabled`. Mention them only when relevant to CLI dispatch — never as a "fix" for a restart failure.
 
 ### Hard prohibitions — no exceptions
 
