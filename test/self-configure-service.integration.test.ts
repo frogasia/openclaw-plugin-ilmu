@@ -41,11 +41,17 @@ function buildContext(
   return { ctx, captured };
 }
 
-// All tests skip the bootstrap-floor mutation because it goes through the SDK's
-// mutateConfigFile, which writes to the canonical openclaw.json path resolved
-// from the environment (not parameterizable per call). Bootstrap behaviour is
-// already covered by test/bootstrap-floor.test.ts.
-const ENV_NO_BOOTSTRAP = { ILMU_NO_BOOTSTRAP_BUMP: "1" } as NodeJS.ProcessEnv;
+// All tests skip every config-layer mutation (bootstrap-floor, tool-allowlist,
+// deepwiki-mcp) because they go through the SDK's mutateConfigFile, which
+// writes to the canonical openclaw.json path resolved from the environment
+// (not parameterizable per call). Per-mutation behaviour is covered by
+// test/bootstrap-floor.test.ts, test/tool-allowlist.test.ts, and
+// test/deepwiki-mcp.test.ts respectively.
+const ENV_NO_BOOTSTRAP = {
+  ILMU_NO_BOOTSTRAP_BUMP: "1",
+  ILMU_NO_TOOL_ALLOWLIST: "1",
+  ILMU_NO_DEEPWIKI_MCP: "1",
+} as NodeJS.ProcessEnv;
 
 describe("runIlmuSelfConfigure — workspace-ready gate", () => {
   let workspaceDir: string;
