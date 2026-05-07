@@ -58,9 +58,21 @@ If none of these is present, do not raise the topic. Most config keys (provider 
 ### When you see a signal — consult the user, do not act
 
 1. Quote the exact line from the tool output that triggered the signal. Do not paraphrase.
-2. Recommend the official command: **`openclaw gateway restart`** (`--force` to skip waiting for active work; `--wait <duration>` to defer). This command works ONLY when the gateway is installed as a managed service (launchd on macOS, systemd on Linux, scheduled task on Windows).
-3. **If the gateway is unmanaged** — foreground `openclaw gateway run`, `--dev` mode, container, or dev workspace — `openclaw gateway restart` will not do anything useful. Surface this risk explicitly: *"This gateway appears to be running in <foreground/container/dev>; `openclaw gateway restart` only works for managed services. The operator likely needs to restart the container or relaunch the foreground process themselves — should I just leave this for you to handle?"*
+2. Recommend the official command: **`openclaw gateway restart`** (`--force` to skip waiting for in-flight work; `--wait <duration>` to defer). It resolves at runtime to one of three modes — all are graceful, none requires you to kill a PID:
+   - **Managed service** (launchd on macOS, systemd on Linux, scheduled task on Windows) — restart via the service manager.
+   - **Same PID namespace** — CLI sends `SIGUSR1` to the gateway PID; the run loop drains in-flight work (`deferGatewayRestartUntilIdle`), then re-initialises in-process. **No process exit, the parent shell stays bound, no orphaned-process problem.** This is the path that fires when the agent and gateway run in the same container or shell session — e.g. `docker run -it openclaw bash` then `openclaw gateway run` in that shell, with the agent loop running inside the gateway.
+   - **Windows scheduled-task handoff** — fallback for managed Windows installs.
+3. **The only topology where `openclaw gateway restart` cannot reach the gateway** is cross-container (agent in container A, gateway in container B with separate PID namespaces). In that case the CLI returns a non-zero exit / failure message — **trust that signal**; do NOT try to "fix" it by killing PIDs from the agent side, and do NOT escalate to `docker stop` / `docker restart` either. Surface to the operator: *"This agent appears to be in a different container from the gateway; `openclaw gateway restart` can't reach the gateway PID from here. You'll need to restart the gateway container yourself via your orchestrator (Docker `restart` policy, K8s rollout, etc.)."*
 4. Wait for the user to confirm before running anything restart-related. If they confirm, you may run `openclaw gateway restart` with the flags they approved — never anything else.
+
+### Detecting your topology
+
+Two env vars surface deployment context:
+
+- `OPENCLAW_CONTAINER_HINT` — set by the operator or image to label the deployment shape (e.g. `"docker"`, `"k8s"`).
+- `OPENCLAW_CONTAINER` — same purpose; either is honoured by OpenClaw's runtime hints.
+
+When either is set, you are in a container. Use it to tailor your phrasing (*"this gateway is running in a container, so..."*) — but the lifecycle policy above is identical regardless of topology: surface the signal, recommend `openclaw gateway restart`, never act unilaterally, never kill.
 
 ### Hard prohibitions — no exceptions
 
