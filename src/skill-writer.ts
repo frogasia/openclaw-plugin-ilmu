@@ -5,9 +5,6 @@ export const ILMU_SKILL_SLUG = "ilmu-configuration";
 export const OPENCLAW_SKILL_SLUG = "openclaw-configuration";
 export const SKILL_FILENAME = "SKILL.md";
 
-// Back-compat alias for callers / tests that imported the original constant.
-export const ILMU_SKILL_FILENAME = SKILL_FILENAME;
-
 export type SkillSpec = {
   slug: string;
   templateUrl: URL;
@@ -29,9 +26,6 @@ export type SkillRenderPaths = {
   workspaceDir: string;
   configPath: string;
 };
-
-// Back-compat alias.
-export type IlmuSkillPaths = SkillRenderPaths;
 
 const templateCache = new Map<string, string>();
 
@@ -76,31 +70,6 @@ export async function applySkillWrite(
   await mkdir(dirname(skillPath), { recursive: true });
   await writeFile(skillPath, rendered, "utf8");
   return { path: skillPath, action: "wrote" };
-}
-
-// Back-compat helpers — preserve the ILMU-named exports the existing tests
-// and orchestrator already call.
-
-export function resolveIlmuSkillPath(workspaceDir: string): string {
-  return resolveSkillPath(workspaceDir, ILMU_SKILL_SLUG);
-}
-
-export function resolveIlmuSkillsDir(workspaceDir: string): string {
-  return resolveSkillsDir(workspaceDir);
-}
-
-export function resolveOpenclawSkillPath(workspaceDir: string): string {
-  return resolveSkillPath(workspaceDir, OPENCLAW_SKILL_SLUG);
-}
-
-export async function renderIlmuSkill(paths: IlmuSkillPaths): Promise<string> {
-  return renderSkill(ILMU_SKILL, paths);
-}
-
-export async function applyIlmuSkillWrite(
-  paths: IlmuSkillPaths,
-): Promise<{ path: string; action: "wrote" | "noop-content-match" }> {
-  return applySkillWrite(ILMU_SKILL, paths);
 }
 
 async function safeReadFile(path: string): Promise<string | null> {

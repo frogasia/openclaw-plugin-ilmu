@@ -23,12 +23,12 @@ Both models declare `reasoning: true`. Onboarding seeds `agents.defaults.thinkin
 
 ## Self-configuration mutations
 
-Every time the plugin loads (after onboarding has finished), it runs three idempotent mutations so the agent knows exactly how to reconfigure ILMU on request — no filesystem hunting, no `find` / `ls ~` discovery commands. All mutations are **opt-in by default** and can be disabled per-mutation.
+The plugin's manifest declares `activation.onStartup: true`, so the self-configure service runs on **every gateway start** (not just install) — once the workspace has been onboarded (`<workspaceDir>/AGENTS.md` exists). Each mutation is idempotent: re-runs are free, content above/below managed regions is preserved byte-identically, and `bootstrapBump` is raise-only. Mutations are **on by default** and can be disabled per-mutation.
 
 | Mutation | What it does | Where |
 | --- | --- | --- |
-| `agentsMd` | Inserts/replaces an `<ilmu-platform-prompt …>` block listing the workspace path, config path, and the absolute path to the configuration skill. Idempotent via SHA-256 hash attribute. | `<workspaceDir>/AGENTS.md` |
-| `skill` | Writes the `ilmu-configuration` skill so the agent's first move on an ILMU-config request is to read it. | `<workspaceDir>/skills/ilmu-configuration/SKILL.md` |
+| `agentsMd` | Inserts/replaces an `<ilmu-platform-prompt …>` block listing the workspace path, config path, and the absolute paths to **both** configuration skills. Idempotent via SHA-256 hash attribute. | `<workspaceDir>/AGENTS.md` |
+| `skill` | Writes two skills: `ilmu-configuration` (read → modify → validate playbook for ILMU provider settings) and `openclaw-configuration` (thin router pointing the agent at `openclaw --help`, `openclaw doctor`, and `docs.openclaw.ai` for non-ILMU OpenClaw setup tasks). | `<workspaceDir>/skills/{ilmu,openclaw}-configuration/SKILL.md` |
 | `bootstrapBump` | **Raise-only** floor on `agents.defaults.bootstrapMaxChars` (≥ 32 000) and `bootstrapTotalMaxChars` (≥ 200 000), so the new bootstrap content actually reaches the model. **Never lowers** existing values. | `<configPath>` (`agents.defaults.*`) |
 
 If any single mutation fails, the others still run and provider registration still succeeds — failures log a warning suggesting `openclaw doctor --fix`.

@@ -16,9 +16,10 @@ import {
 import {
   ALL_SKILLS,
   applySkillWrite,
-  resolveIlmuSkillPath,
-  resolveIlmuSkillsDir,
-  resolveOpenclawSkillPath,
+  ILMU_SKILL_SLUG,
+  OPENCLAW_SKILL_SLUG,
+  resolveSkillPath,
+  resolveSkillsDir,
 } from "./skill-writer.js";
 
 export const ILMU_SELF_CONFIGURE_SERVICE_ID = "ilmu/self-configure";
@@ -75,9 +76,9 @@ export function resolveIlmuPaths(params: {
   return {
     workspaceDir: params.workspaceDir,
     configPath: params.configPath,
-    skillsDir: resolveIlmuSkillsDir(params.workspaceDir),
-    skillPath: resolveIlmuSkillPath(params.workspaceDir),
-    openclawSkillPath: resolveOpenclawSkillPath(params.workspaceDir),
+    skillsDir: resolveSkillsDir(params.workspaceDir),
+    skillPath: resolveSkillPath(params.workspaceDir, ILMU_SKILL_SLUG),
+    openclawSkillPath: resolveSkillPath(params.workspaceDir, OPENCLAW_SKILL_SLUG),
     agentsMdPath: join(params.workspaceDir, AGENTS_MD_FILENAME),
   };
 }
@@ -144,7 +145,7 @@ export async function runIlmuSelfConfigure(
 
   if (flags.skill) {
     for (const spec of ALL_SKILLS) {
-      await runIsolated(logger, `skill[${spec.slug}]`, resolveIlmuSkillsDir(paths.workspaceDir), async () => {
+      await runIsolated(logger, `skill[${spec.slug}]`, resolveSkillsDir(paths.workspaceDir), async () => {
         const result = await applySkillWrite(spec, {
           workspaceDir: paths.workspaceDir,
           configPath: paths.configPath,
