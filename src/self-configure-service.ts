@@ -9,10 +9,10 @@ import {
 } from "./agents-md-prompt.js";
 import {
   applyBootstrapFloorMutation,
-  ILMU_BOOTSTRAP_MAX_CHARS_FLOOR,
-  ILMU_BOOTSTRAP_TOTAL_MAX_CHARS_FLOOR,
+  DEFAULT_BOOTSTRAP_FLOORS,
   summarizeBootstrapFloorPlan,
 } from "./bootstrap-floor.js";
+import { applyDeepwikiMcpMutation, summarizeDeepwikiMcpPlan } from "./deepwiki-mcp.js";
 import {
   ALL_SKILLS,
   applySkillWrite,
@@ -21,6 +21,10 @@ import {
   resolveSkillPath,
   resolveSkillsDir,
 } from "./skill-writer.js";
+import {
+  applyToolAllowlistMutation,
+  summarizeToolAllowlistPlan,
+} from "./tool-allowlist.js";
 
 export const ILMU_SELF_CONFIGURE_SERVICE_ID = "ilmu/self-configure";
 export const AGENTS_MD_FILENAME = "AGENTS.md";
@@ -29,6 +33,8 @@ export type IlmuMutationFlags = {
   agentsMd: boolean;
   skill: boolean;
   bootstrapBump: boolean;
+  toolAllowlist: boolean;
+  deepwikiMcp: boolean;
 };
 
 export type IlmuPluginConfig = {
@@ -39,6 +45,8 @@ export const DEFAULT_ILMU_MUTATION_FLAGS: IlmuMutationFlags = {
   agentsMd: true,
   skill: true,
   bootstrapBump: true,
+  toolAllowlist: true,
+  deepwikiMcp: true,
 };
 
 type Logger = OpenClawPluginServiceContext["logger"];
@@ -52,10 +60,16 @@ export function resolveMutationFlags(
     skill: config?.mutations?.skill ?? DEFAULT_ILMU_MUTATION_FLAGS.skill,
     bootstrapBump:
       config?.mutations?.bootstrapBump ?? DEFAULT_ILMU_MUTATION_FLAGS.bootstrapBump,
+    toolAllowlist:
+      config?.mutations?.toolAllowlist ?? DEFAULT_ILMU_MUTATION_FLAGS.toolAllowlist,
+    deepwikiMcp:
+      config?.mutations?.deepwikiMcp ?? DEFAULT_ILMU_MUTATION_FLAGS.deepwikiMcp,
   };
   if (isTruthyEnv(env.ILMU_NO_AGENTS_MD)) flags.agentsMd = false;
   if (isTruthyEnv(env.ILMU_NO_SKILL)) flags.skill = false;
   if (isTruthyEnv(env.ILMU_NO_BOOTSTRAP_BUMP)) flags.bootstrapBump = false;
+  if (isTruthyEnv(env.ILMU_NO_TOOL_ALLOWLIST)) flags.toolAllowlist = false;
+  if (isTruthyEnv(env.ILMU_NO_DEEPWIKI_MCP)) flags.deepwikiMcp = false;
   return flags;
 }
 
@@ -157,11 +171,22 @@ export async function runIlmuSelfConfigure(
 
   if (flags.bootstrapBump) {
     await runIsolated(logger, "bootstrap-floor", configPath, async () => {
-      const plan = await applyBootstrapFloorMutation({
-        maxChars: ILMU_BOOTSTRAP_MAX_CHARS_FLOOR,
-        totalMaxChars: ILMU_BOOTSTRAP_TOTAL_MAX_CHARS_FLOOR,
-      });
+      const plan = await applyBootstrapFloorMutation(DEFAULT_BOOTSTRAP_FLOORS);
       logger.info?.(summarizeBootstrapFloorPlan(plan));
+    });
+  }
+
+  if (flags.toolAllowlist) {
+    await runIsolated(logger, "tool-allowlist", configPath, async () => {
+      const plan = await applyToolAllowlistMutation();
+      logger.info?.(summarizeToolAllowlistPlan(plan));
+    });
+  }
+
+  if (flags.deepwikiMcp) {
+    await runIsolated(logger, "deepwiki-mcp", configPath, async () => {
+      const plan = await applyDeepwikiMcpMutation();
+      logger.info?.(summarizeDeepwikiMcpPlan(plan));
     });
   }
 }
