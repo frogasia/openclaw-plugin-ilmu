@@ -108,4 +108,54 @@ describe("ilmu provider plugin", () => {
     } as never);
     expect(cfg.agents?.defaults?.thinkingDefault).toBe("high");
   });
+
+  it("seeds both Super and Nano into agents.defaults.models so both appear in the dropdown", () => {
+    const cfg = applyIlmuConfig({} as never);
+    const seeded = cfg.agents?.defaults?.models ?? {};
+    expect(Object.keys(seeded).sort()).toEqual(["ilmu/ilmu-nemo-nano", "ilmu/nemo-super"]);
+    expect(seeded["ilmu/nemo-super"]?.alias).toBe("ILMU Nemo Super");
+    expect(seeded["ilmu/ilmu-nemo-nano"]?.alias).toBe("ILMU Nemo Nano");
+  });
+
+  it("migrates the legacy 'ILMU' alias to the descriptive default", () => {
+    const cfg = applyIlmuConfig({
+      agents: {
+        defaults: {
+          models: {
+            "ilmu/nemo-super": { alias: "ILMU" },
+          },
+        },
+      },
+    } as never);
+    expect(cfg.agents?.defaults?.models?.["ilmu/nemo-super"]?.alias).toBe("ILMU Nemo Super");
+    expect(cfg.agents?.defaults?.models?.["ilmu/ilmu-nemo-nano"]?.alias).toBe("ILMU Nemo Nano");
+  });
+
+  it("preserves operator-customized aliases (does not clobber non-legacy values)", () => {
+    const cfg = applyIlmuConfig({
+      agents: {
+        defaults: {
+          models: {
+            "ilmu/nemo-super": { alias: "My Big Model" },
+            "ilmu/ilmu-nemo-nano": { alias: "Cheap Tier" },
+          },
+        },
+      },
+    } as never);
+    expect(cfg.agents?.defaults?.models?.["ilmu/nemo-super"]?.alias).toBe("My Big Model");
+    expect(cfg.agents?.defaults?.models?.["ilmu/ilmu-nemo-nano"]?.alias).toBe("Cheap Tier");
+  });
+
+  it("defensively migrates a stray legacy 'ILMU' placeholder on the Nano ref too", () => {
+    const cfg = applyIlmuConfig({
+      agents: {
+        defaults: {
+          models: {
+            "ilmu/ilmu-nemo-nano": { alias: "ILMU" },
+          },
+        },
+      },
+    } as never);
+    expect(cfg.agents?.defaults?.models?.["ilmu/ilmu-nemo-nano"]?.alias).toBe("ILMU Nemo Nano");
+  });
 });
