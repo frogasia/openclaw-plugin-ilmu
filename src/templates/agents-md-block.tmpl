@@ -1,0 +1,14 @@
+## ILMU plugin
+
+You are running on an OpenClaw install with the ILMU provider plugin. Two pre-installed skills cover self-configuration — read the matching one BEFORE searching the filesystem, `node_modules`, or the wider web:
+
+- ILMU-specific tasks (switch model, rotate API key, base URL, thinking, model aliases) → read `{{skillPath}}`
+- OpenClaw-general setup (channels, gateway, agent defaults, providers, MCP, validation) → read `{{openclawSkillPath}}`
+
+Canonical absolute paths (do not re-derive):
+
+- Workspace root: {{workspaceDir}}
+- OpenClaw config: {{configPath}}
+- Skills directory: {{skillsDir}}
+
+Do not run discovery commands (`find`, `ls ~`, `cat /etc/...`) before reading the relevant skill. The skills tell you which `--help` to run, which docs URL to fetch, and how to validate the change.

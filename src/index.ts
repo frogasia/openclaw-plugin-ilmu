@@ -3,6 +3,7 @@ import { defineSingleProviderPluginEntry } from "openclaw/plugin-sdk/provider-en
 import { buildProviderReplayFamilyHooks } from "openclaw/plugin-sdk/provider-model-shared";
 import { applyIlmuConfig, ILMU_DEFAULT_MODEL_REF } from "./onboard.js";
 import { buildIlmuProvider } from "./provider-catalog.js";
+import { buildIlmuSelfConfigureService } from "./self-configure-service.js";
 
 const PROVIDER_ID = "ilmu";
 
@@ -10,6 +11,9 @@ export default defineSingleProviderPluginEntry({
   id: PROVIDER_ID,
   name: "ILMU Provider",
   description: "Bundled ILMU provider plugin",
+  register: (api) => {
+    api.registerService(buildIlmuSelfConfigureService());
+  },
   provider: {
     label: "ILMU",
     docsPath: "/providers/ilmu",

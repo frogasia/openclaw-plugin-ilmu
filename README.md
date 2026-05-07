@@ -21,6 +21,63 @@ OpenClaw plugin that registers [Ilmu](https://ilmu.ai) as an LLM provider. Ilmu 
 
 Both models declare `reasoning: true`. Onboarding seeds `agents.defaults.thinkingDefault: "medium"` so step-by-step thinking is on out of the box.
 
+## Self-configuration mutations
+
+The plugin's manifest declares `activation.onStartup: true`, so the self-configure service runs on **every gateway start** (not just install) — once the workspace has been onboarded (`<workspaceDir>/AGENTS.md` exists). Each mutation is idempotent: re-runs are free, content above/below managed regions is preserved byte-identically, and `bootstrapBump` is raise-only. Mutations are **on by default** and can be disabled per-mutation.
+
+| Mutation | What it does | Where |
+| --- | --- | --- |
+| `agentsMd` | Inserts/replaces an `<ilmu-platform-prompt …>` block listing the workspace path, config path, and the absolute paths to **both** configuration skills. Idempotent via SHA-256 hash attribute. | `<workspaceDir>/AGENTS.md` |
+| `skill` | Writes two skills: `ilmu-configuration` (read → modify → validate playbook for ILMU provider settings) and `openclaw-configuration` (thin router pointing the agent at `openclaw --help`, `openclaw doctor`, and `docs.openclaw.ai` for non-ILMU OpenClaw setup tasks). | `<workspaceDir>/skills/{ilmu,openclaw}-configuration/SKILL.md` |
+| `bootstrapBump` | **Raise-only** floor on `agents.defaults.bootstrapMaxChars` (≥ 32 000) and `bootstrapTotalMaxChars` (≥ 200 000), so the new bootstrap content actually reaches the model. **Never lowers** existing values. | `<configPath>` (`agents.defaults.*`) |
+
+If any single mutation fails, the others still run and provider registration still succeeds — failures log a warning suggesting `openclaw doctor --fix`.
+
+### Disabling individual mutations
+
+Persistent (in `openclaw.json`):
+
+```jsonc
+{
+  "plugins": {
+    "entries": {
+      "ilmu": {
+        "config": {
+          "mutations": {
+            "agentsMd": false,
+            "skill": false,
+            "bootstrapBump": false
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+One-shot env overrides (force-off only — never force-on):
+
+```bash
+ILMU_NO_AGENTS_MD=1       openclaw …
+ILMU_NO_SKILL=1           openclaw …
+ILMU_NO_BOOTSTRAP_BUMP=1  openclaw …
+```
+
+### Path resolution
+
+The plugin reads the following env vars (with defaults), resolves them once at service start, and bakes absolute paths into rendered content:
+
+| Env var | Default |
+| --- | --- |
+| `OPENCLAW_HOME` | `~/.openclaw` |
+| `OPENCLAW_STATE_DIR` | `~/.openclaw` |
+| `OPENCLAW_CONFIG_PATH` | `<state>/openclaw.json` |
+| `OPENCLAW_WORKSPACE_DIR` | `<home>/workspace` |
+
+### Why the bootstrap floor is raise-only
+
+`bootstrapMaxChars` / `bootstrapTotalMaxChars` are global agent defaults, not per-plugin overrides. ILMU's 256 k-token context comfortably fits a 200 k-char bootstrap budget (~50 k tokens) while leaving ~200 k tokens for working context. We raise the floor so the new bootstrap block reaches the model — but never lower a user's existing higher value, which keeps the rule monotonic and conflict-free across plugins.
+
 ## Install
 
 ```bash
