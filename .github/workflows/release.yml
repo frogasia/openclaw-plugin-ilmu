@@ -33,15 +33,7 @@ jobs:
       - run: npm test
       - run: npm run build
       - name: Verify tarball ships compiled runtime entry
-        run: |
-          PACK_LIST=$(npm pack --dry-run --json)
-          for required in dist/index.js dist/provider-discovery.js dist/templates/agents-md-block.tmpl; do
-            if ! echo "$PACK_LIST" | grep -q "\"$required\""; then
-              echo "::error::publishable tarball is missing $required"
-              echo "$PACK_LIST"
-              exit 1
-            fi
-          done
+        run: ./scripts/verify-tarball.sh
       - name: Verify package.json version matches release tag
         run: |
           PKG_VERSION=$(node -p "require('./package.json').version")
