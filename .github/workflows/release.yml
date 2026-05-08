@@ -51,12 +51,16 @@ jobs:
     # plugin via the OpenClaw CLI, on a fresh runner with no repo checkout.
     # If this fails, the published artifact is broken — patch the bug, bump version,
     # and re-release.
+    #
+    # Node 22 is required because openclaw>=2026 declares engines.node>=22.14.0;
+    # on Node 20, `npm install -g openclaw` silently falls back to the unrelated
+    # 0.0.1 placeholder package (no bin), producing "openclaw: command not found".
     needs: publish
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           registry-url: https://registry.npmjs.org
       - name: Install OpenClaw CLI
         run: npm install -g openclaw
