@@ -1,6 +1,6 @@
 {
   "name": "@ytlailabs/ilmu-openclaw-plugin",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Ilmu LLM provider for OpenClaw — OpenAI-compatible access to Ilmu models (nemo-super, ilmu-nemo-nano).",
   "license": "MIT",
   "repository": {
