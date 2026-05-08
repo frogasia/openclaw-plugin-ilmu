@@ -11,10 +11,11 @@
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "npm run typecheck && npm test"
+    "build": "tsc -p tsconfig.build.json && cp -R src/templates dist/templates",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build"
   },
   "files": [
-    "src/",
+    "dist/",
     "skills/",
     "openclaw.plugin.json",
     "README.md",
@@ -30,7 +31,7 @@
       "pluginApi": ">=1.0.0"
     },
     "extensions": [
-      "./src/index.ts"
+      "./dist/index.js"
     ]
   },
   "peerDependencies": {

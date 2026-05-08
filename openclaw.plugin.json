@@ -6,7 +6,7 @@
     "onStartup": true
   },
   "enabledByDefault": true,
-  "providerDiscoveryEntry": "./src/provider-discovery.ts",
+  "providerDiscoveryEntry": "./dist/provider-discovery.js",
   "providers": ["ilmu"],
   "modelCatalog": {
     "providers": {
