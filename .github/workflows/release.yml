@@ -31,6 +31,17 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
+      - run: npm run build
+      - name: Verify tarball ships compiled runtime entry
+        run: |
+          PACK_LIST=$(npm pack --dry-run --json)
+          for required in dist/index.js dist/provider-discovery.js dist/templates/agents-md-block.tmpl; do
+            if ! echo "$PACK_LIST" | grep -q "\"$required\""; then
+              echo "::error::publishable tarball is missing $required"
+              echo "$PACK_LIST"
+              exit 1
+            fi
+          done
       - name: Verify package.json version matches release tag
         run: |
           PKG_VERSION=$(node -p "require('./package.json').version")
@@ -42,3 +53,39 @@ jobs:
       - run: npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  verify-install:
+    # Post-publish sanity check: simulate a real user installing the just-published
+    # plugin via the OpenClaw CLI, on a fresh runner with no repo checkout.
+    # If this fails, the published artifact is broken — patch the bug, bump version,
+    # and re-release.
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+      - name: Install OpenClaw CLI
+        run: npm install -g openclaw
+      - name: Wait for npm registry propagation
+        env:
+          PKG: '@ytlailabs/ilmu-openclaw-plugin'
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          for attempt in 1 2 3 4 5 6 7 8; do
+            if npm view "$PKG@$VERSION" version >/dev/null 2>&1; then
+              echo "Found $PKG@$VERSION on registry (attempt $attempt)"
+              exit 0
+            fi
+            echo "Not yet visible on registry, waiting 15s..."
+            sleep 15
+          done
+          echo "::error::$PKG@$VERSION did not become visible on the npm registry within 2 minutes"
+          exit 1
+      - name: Install plugin via OpenClaw CLI
+        env:
+          PKG: '@ytlailabs/ilmu-openclaw-plugin'
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          openclaw plugins install "$PKG@$VERSION"
